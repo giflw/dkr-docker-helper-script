@@ -2,6 +2,18 @@
 
 `dkr` is a simple shell script to easy docker usage by developers
 
+## Why use it?
+
+- uses `sudo docker` automaticaly if user is not in docker group
+- `dkr b. tag-name` instead of `docker build -t tag-name .`
+- `dkr rr tag-name [cmd]` instead of `docker run --rm -it tag-name [cmd]`
+- `dkr clean -y`instead of:
+    + `docker rmi $(docker images -f "dangling=true" --no-trunc)`
+    + `docker rm $(docker ps --filter status=dead --filter status=exited)`
+    + `docker volume rm $(docker volume ls -f dangling=true)`
+
+_And I hope that more are comming_
+
 ## Dependencies
 
 ### To run:
