@@ -21,7 +21,9 @@ As help is inside script, using something like do string, an it's parsed on dema
 ## Help from version 0.1.0
 
 ```
-Usage: dkr command [options]
+ v0.1.0
+
+ Usage: dkr command [options]
         -h show dkr help
         --help show docker help
 
@@ -29,7 +31,7 @@ Usage: dkr command [options]
              -v: show version and exit
               i: alias for docker images
               b: alias for docker build
-              b: build Dockerfile in working folder. Needs image-tag
+             b.: build Dockerfile in working folder. Needs image-tag
                                   ($SCRIPT_NAME b. image_name)
              rr: run image with --rm -it
               r: alias for docker run

@@ -13,9 +13,10 @@ done
 SCRIPT_NAME=${0##*/} 
 
 USAGE="\
+DKR v${VERSION} \n\n \
 Usage: $SCRIPT_NAME command [options]    \n \
 \t-h      show dkr help     \n \
-\t--help  show docker help
+\t--help  show docker help \n \
 "
 
 # get first parameter and shift parameters to pass to docker
@@ -34,7 +35,7 @@ case "$CMD" in
                 #print("DEBUG " $0)
                 if (length($1) > 0){
                     sub(/[\[\]\".)]*/, "", $1);
-                    gsub(/[\[\]\".)]*/, "", $1);
+                    gsub(/[\[\]\")]*/, "", $1);
                     dkrpar=$1
                     if (dkrpar == "+") {
                         dkrpar="<unknown>"
