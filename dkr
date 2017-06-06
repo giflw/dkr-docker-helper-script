@@ -1,0 +1,183 @@
+#!/bin/bash
+
+VERSION=0.1.0
+
+alias docker="sudo docker"
+for g in `groups`; do
+    if [ "$g" = "docker" ]; then
+        #echo "Docker group found, so unaliasing docker!"
+        unalias docker
+    fi
+done
+
+SCRIPT_NAME=${0##*/} 
+
+USAGE="\
+Usage: $SCRIPT_NAME command [options]    \n \
+\t-h      show dkr help     \n \
+\t--help  show docker help
+"
+
+# get first parameter and shift parameters to pass to docker
+CMD="$1"
+shift 1
+case "$CMD" in
+    "-h") ### show help of this script
+        echo -e $USAGE
+        echo
+        grep "###" `realpath $0`                                    |   \
+            grep -v grep | grep -v "dkrpar"                         |   \
+            grep -v sed                                             |   \
+            sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//'       |   \
+            awk '
+            {
+                #print("DEBUG " $0)
+                if (length($1) > 0){
+                    sub(/[\[\]\".)]*/, "", $1);
+                    gsub(/[\[\]\".)]*/, "", $1);
+                    dkrpar=$1
+                    if (dkrpar == "+") {
+                        dkrpar="<unknown>"
+                    } else if (dkrpar == "###") {
+                        dkrpar=""
+                    } else if (dkrpar == "*") {
+                        dkrpar="<none>"
+                    }
+                    if (length(dkrpar) != 0) {
+                        dkrpar=dkrpar": "
+                    }
+                    printf("%17s", dkrpar);
+                    
+                    
+                    dkrsubpar=""
+                    dkrdesc=substr($0, index($0, "#") + 4);
+                    if (NF == 3) {
+                        dkrdesc="alias for docker "dkrdesc;
+                    } else if (length(dkrpar) == 0) {
+                        idx=index(dkrdesc, ":")
+                        if(idx > 0){
+                            dkrsubpar=substr(dkrdesc, 0, idx - 1);
+                            dkrdesc=substr(dkrdesc, idx + 2);
+                        }
+                        printf("%-10s ", dkrsubpar)
+                        if (length(dkrsubpar) > 0){
+                            printf(": ")
+                        } else {
+                            printf("      ")
+                        }
+                    }
+                    
+                    print(dkrsubpar dkrdesc);
+                }
+            }'
+        echo
+        exit 0
+        ;;
+    "-v") ### show version and exit
+        echo "dkr v${VERSION}"
+        echo "by Guilherme I F L Weizenmann"
+        echo "source at https://github.com/giflw/dkr-docker-helper-script"
+        exit 0
+        ;;
+    "i") ### images
+        CMD="images"
+        ;;
+    "b") ### build
+        CMD="build"
+        ;;
+    "b.") ### build Dockerfile in working folder. Needs image-tag
+          ### ($SCRIPT_NAME b. image_name)
+        CMD="build . -t $1"
+        shift
+        ;;
+    "rr") ### run image with --rm -it
+        CMD="run --rm -it"
+        ;;
+    "r") ### run
+        CMD="run"
+        ;;
+    "clean") ### clean docker env (usage: $SCRIPT_NAME clean [-y] [c|i|v])
+             ### <none> : clear all caches (optional)
+             ### i      : clear dangling images
+             ### c      : clear exited or dead containers
+             ### v      : clear dangling volumes
+             ### -y     : say yes to proceed question (optional)
+             ###            if only -y, clear all caches without further questions
+             ###            (must be after clean)
+        OK=false
+        if [ "$1" != "-y" ]; then
+            echo -n "Clear all docker env?[y/N] "
+            read proceed
+            if [ "$proceed" = "y" -o "$proceed" = "Y" ]; then
+                OK=true
+            fi
+        else
+            shift
+            OK=true
+        fi
+        if [ "$OK" = "true" ]; then
+            itens=$@
+            if [ -z "$itens" ]; then
+                itens="i c v" # image, containers, volumes
+            fi
+            for item in $itens; do
+                echo "====== Cleaning $item... ======"
+                case $item in
+                    "i")
+                        echo "Cleanig dangling images"
+                        IMAGES=`docker images -f "dangling=true" --no-trunc`
+                        echo "$IMAGES"
+                        if [ `echo "$IMAGES" | wc -l` -eq 1 ]; then
+                            echo "No dangling images to clear"
+                        else
+                            echo "Cleaning dangling images..."
+                            docker rmi `echo "$IMAGES" | grep -v "IMAGE ID" | awk '{print $3}'`
+                        fi
+                        ;;
+                    "c")
+                        echo "Cleanig dead and exited containers"
+                        CONTAINERS=`docker ps --filter status=dead --filter status=exited`
+                        echo "$CONTAINERS"
+                        if [ `echo "$CONTAINERS" | wc -l` -eq 1 ]; then
+                            echo "No containers dead or exited to clean"
+                        else
+                            echo "Cleaning dead and exited containers..."
+                            docker rm `echo "$CONTAINERS" | grep -v "CONTAINER ID" | awk '{print $1}'`
+                        fi
+                        ;;
+                    "v")
+                        echo "Cleanig dangling volumes"
+                        VOLUMES=`docker volume ls -f dangling=true`
+                        echo "$VOLUMES"
+                        if [ `echo "$VOLUMES" | wc -l` -eq 1 ]; then
+                            echo "No dangling volumes to clear"
+                        else
+                            echo "Cleaning dangling volumes..."
+                            docker volume rm `echo "$VOLUMES" | grep -v "VOLUME NAME" | awk '{print $2}'`
+                        fi
+                        ;;
+                    *)
+                        echo $item
+                        ;;
+                esac
+                echo "------ ...clean $item done! ------"
+            done
+        fi
+        exit 0
+        ;;
+    [.]+) ### pass any unrecognized command directly to docker
+        echo "+"
+        ;;
+    *) ### show usage
+        if [ -z "$CMD" ]; then
+            echo -e $USAGE
+        fi
+esac
+
+if [ -n "$CMD" ]; then
+    docker $CMD $*
+    EXITCODE=$?
+else
+    EXITCODE=1
+fi
+exit $EXITCODE
