@@ -1,5 +1,7 @@
 # DKR
 
+**D**oc**K**e**R** Helper Script
+
 `dkr` is a simple shell script to easy docker usage by developers
 
 ## Why use it?
