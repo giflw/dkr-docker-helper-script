@@ -98,11 +98,11 @@ case "$CMD" in
 	shift
         CMD="run --rm -it "
 	while [ "${1:0:1}" = "-" ]; do
-		echo "-?" ${param:0:1}
-		echo IF $1 $2
+		#echo "-?" ${param:0:1}
+		#echo IF $1 $2
 		CMD="$CMD $1 $2 "
 		shift && shift
-		echo ------
+		#echo ------
 	done
 	CMD="$CMD $IMAGE"
         ;;
