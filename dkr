@@ -129,7 +129,7 @@ case "$CMD" in
             OK=true
         fi
         if [ "$OK" = "true" ]; then
-            itens=$@
+            itens="$@"
             if [ -z "$itens" ]; then
                 itens="i c v" # image, containers, volumes
             fi
@@ -188,9 +188,8 @@ case "$CMD" in
 esac
 
 if [ -n "$CMD" ]; then
-    CMD="docker $CMD $*"
-    echo "[DBG] $CMD"
-    $CMD
+    echo "[DBG] docker $CMD $@"
+    docker $CMD "$@"
     EXITCODE=$?
 else
     EXITCODE=1
