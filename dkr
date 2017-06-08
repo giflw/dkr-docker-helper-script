@@ -91,8 +91,20 @@ case "$CMD" in
         CMD="build . -t $1"
         shift
         ;;
-    "rr") ### run image with --rm -it
-        CMD="run --rm -it"
+    "rr") ### run image with --rm -it, passing all parameter pairs in form of -FOO BAR to docker run
+	  ### 		dkr rr imagename -foo1 bar1 -foo2 bar2 cmd -p1 -p2
+	  ###			-> docker run --rm -it -foo1 bar1 -foo2 bar2 imagename -p1 -p2
+	IMAGE=$1
+	shift
+        CMD="run --rm -it "
+	while [ "${1:0:1}" = "-" ]; do
+		echo "-?" ${param:0:1}
+		echo IF $1 $2
+		CMD="$CMD $1 $2 "
+		shift && shift
+		echo ------
+	done
+	CMD="$CMD $IMAGE"
         ;;
     "r") ### run
         CMD="run"
@@ -176,7 +188,9 @@ case "$CMD" in
 esac
 
 if [ -n "$CMD" ]; then
-    docker $CMD $*
+    CMD="docker $CMD $*"
+    echo "[DBG] $CMD"
+    $CMD
     EXITCODE=$?
 else
     EXITCODE=1
