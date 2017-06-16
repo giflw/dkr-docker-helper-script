@@ -83,6 +83,17 @@ case "$CMD" in
     "i") ### images
         CMD="images"
         ;;
+    "k") ### kill
+         ### --all : kill all images
+         ### -a    : alias for --all
+	CMD="kill"
+	if [ "$1" = "--all" -o "$1" = "-a"  ]; then
+		shift
+		for img in `docker ps -aq`; do
+			CMD="$CMD $img"
+		done
+	fi
+	;;
     "b") ### build
         CMD="build"
         ;;
